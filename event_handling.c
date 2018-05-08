@@ -61,8 +61,15 @@ void loadImage(SDL_Window *window, char *file)
         printf( "Unable to load image %s! SDL Error: %s\n", "cat2.jpg", SDL_GetError()); 
     } 
 
+    /* Optimize surface */
+    surfImg = SDL_ConvertSurface(surfImg, screenSurface->format, 0); 
+    if(surfImg == NULL){ 
+        printf( "Unable to optimize image %s! SDL Error: %s\n", file, SDL_GetError()); 
+    }
+
 	SDL_BlitSurface( surfImg, NULL, screenSurface, NULL );
 	SDL_UpdateWindowSurface(window);
+    SDL_FreeSurface(surfImg);
 }
 
 void closeAll(SDL_Window *window)

@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include <string.h>
 #include <SDL2/SDL_image.h>
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -67,7 +68,17 @@ void loadImage(SDL_Window *window, char *file)
         printf( "Unable to optimize image %s! SDL Error: %s\n", file, SDL_GetError()); 
     }
 
-	SDL_BlitSurface( surfImg, NULL, screenSurface, NULL );
+    /* Scaled vs non scaled image blitz */
+    if(strncmp(file, "q.jpg", 5) == 0){
+        SDL_Rect stretchRect; 
+        stretchRect.x = 0; 
+        stretchRect.y = 0; 
+        stretchRect.w = SCREEN_WIDTH; 
+        stretchRect.h = SCREEN_HEIGHT; 
+        SDL_BlitScaled(surfImg, NULL, screenSurface, &stretchRect);
+    }else{
+	    SDL_BlitSurface( surfImg, NULL, screenSurface, NULL );
+    }
 	SDL_UpdateWindowSurface(window);
     SDL_FreeSurface(surfImg);
 }

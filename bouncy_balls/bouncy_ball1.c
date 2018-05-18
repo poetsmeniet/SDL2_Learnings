@@ -18,6 +18,8 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect);
 void bounce(SDL_Rect *bRect);
 void move(SDL_Rect *bRect);
 
+/* Normally I would pass these globals as a property of the ball
+ * but I won't bother for this skeleton code */
 int velocity = 10;
 int directionY = 0;
 int velX= 0;

@@ -21,7 +21,7 @@ typedef struct spaceShip{
 SDL_Window *init();
 SDL_Renderer *initRenderer(SDL_Window *window);
 SDL_Texture *loadImageAsTexture(SDL_Window *window, SDL_Renderer *gRenderer, char *file, int width, int height, int x, int y);
-void closeAll(SDL_Window *window);
+void closeAll(SDL_Window *window, SDL_Renderer *gRenderer);
 int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, ss *ss1);
 void bounce(SDL_Rect *bRect);
 void move(SDL_Rect *bRect, ss *ss1);
@@ -56,7 +56,7 @@ int main(int argc, char* args[])
 
     /* Load background image */
     SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-11.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
-    SDL_Texture *bball = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, x, y);
+    SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, x, y);
         
     while(handleEvents(window, gRenderer, &bRect, &ss1)){
         move(&bRect, &ss1);
@@ -65,13 +65,13 @@ int main(int argc, char* args[])
         /* Render bg */
         SDL_RenderCopyEx(gRenderer, bg, NULL, NULL, 0.0, NULL, flip);
     
-        int test = SDL_RenderCopyEx(gRenderer, bball, NULL, &bRect, 0.0, NULL, flip);
+        int test = SDL_RenderCopyEx(gRenderer, ship1, NULL, &bRect, 0.0, NULL, flip);
 	    SDL_RenderPresent(gRenderer);
     }
 
-    SDL_DestroyTexture(bball);
+    SDL_DestroyTexture(ship1);
     SDL_DestroyTexture(bg);
-    closeAll(window);
+    closeAll(window, gRenderer);
 	return 0;
 }
 
@@ -147,9 +147,12 @@ SDL_Texture *loadImageAsTexture(SDL_Window *window, SDL_Renderer *gRenderer, cha
     return newTexture;
 }
 
-void closeAll(SDL_Window *window)
+void closeAll(SDL_Window *window, SDL_Renderer *gRenderer)
 {
+    SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(window);
+    gRenderer = NULL;
+    window = NULL;
     IMG_Quit();
 	SDL_Quit();
 }
@@ -161,7 +164,7 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, s
     while(SDL_PollEvent(&e) != 0){
         /* Handle quit event */
         if(e.type == SDL_QUIT)
-            return 0;
+            closeAll(window, gRenderer);
 
         /* Handle keypresses */
         if(e.type == SDL_KEYDOWN && e.key.repeat == 0){

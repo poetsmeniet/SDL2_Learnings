@@ -15,6 +15,8 @@ typedef struct spaceShip{
     int directionY;
     int velX;
     int velY;
+    double angle;
+    int rotation;
 }ss;
 
 /* Declare functions */
@@ -23,7 +25,6 @@ SDL_Renderer *initRenderer(SDL_Window *window);
 SDL_Texture *loadImageAsTexture(SDL_Window *window, SDL_Renderer *gRenderer, char *file, int width, int height, int x, int y);
 void closeAll(SDL_Window *window, SDL_Renderer *gRenderer);
 int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, ss *ss1);
-void bounce(SDL_Rect *bRect);
 void move(SDL_Rect *bRect, ss *ss1);
 
 int main(int argc, char* args[])
@@ -34,6 +35,8 @@ int main(int argc, char* args[])
     ss1.directionY = 1;
     ss1.velX = 0;
     ss1.velY = 0;
+    ss1.angle = 0.0;
+    ss1.rotation = 0;
 
     /* SDL window + renderer */
 	SDL_Window *window = init();
@@ -41,8 +44,8 @@ int main(int argc, char* args[])
     
     SDL_RendererFlip flip = SDL_FLIP_NONE;
     SDL_Rect bRect; 
-    bRect.x = 0; 
-    bRect.y = 0; 
+    bRect.x = 100; 
+    bRect.y = 100; 
     bRect.w = SCREEN_WIDTH; 
     bRect.h = SCREEN_HEIGHT; 
 
@@ -58,14 +61,15 @@ int main(int argc, char* args[])
     SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-11.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
     SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, x, y);
         
+    /* Main event loop */
     while(handleEvents(window, gRenderer, &bRect, &ss1)){
         move(&bRect, &ss1);
         SDL_RenderClear(gRenderer);
 
-        /* Render bg */
+        /* Render bg and ship.. todo: move to function */
         SDL_RenderCopyEx(gRenderer, bg, NULL, NULL, 0.0, NULL, flip);
-    
-        int test = SDL_RenderCopyEx(gRenderer, ship1, NULL, &bRect, 0.0, NULL, flip);
+        SDL_RenderCopyEx(gRenderer, ship1, NULL, &bRect, ss1.angle, NULL, flip);
+
 	    SDL_RenderPresent(gRenderer);
     }
 
@@ -130,13 +134,6 @@ SDL_Texture *loadImageAsTexture(SDL_Window *window, SDL_Renderer *gRenderer, cha
     } 
 
     /* Convert to texture */
-    SDL_RendererFlip flip = SDL_FLIP_NONE;
-    SDL_Rect bRect; 
-    bRect.x = x; 
-    bRect.y = y; 
-    bRect.w = surfImg->w; 
-    bRect.h = surfImg->h; 
-
 	SDL_Texture* newTexture = NULL;
     newTexture = SDL_CreateTextureFromSurface(gRenderer, surfImg);
 	if(newTexture == NULL)
@@ -176,10 +173,10 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, s
                     ss1->velY += ss1->velocity;
                     break;
                 case SDLK_LEFT:
-                    ss1->velX -= ss1->velocity;
+                    ss1->rotation -= 1;
                     break;
                 case SDLK_RIGHT:
-                    ss1->velX += ss1->velocity;
+                    ss1->rotation += 1;
                     break;
                 case SDLK_q:
                     return 0;
@@ -188,25 +185,6 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, s
                     break;
             }
         }
-
-        //if(e.type == SDL_KEYUP && e.key.repeat == 0){
-        //    switch(e.key.keysym.sym){
-        //        case SDLK_UP:
-        //            velY += velocity;
-        //            break;
-        //        case SDLK_DOWN:
-        //            velY -= velocity;
-        //            break;
-        //        case SDLK_LEFT:
-        //            velX += velocity;
-        //            break;
-        //        case SDLK_RIGHT:
-        //            velX -= velocity;
-        //            break;
-        //        default:
-        //            break;
-        //    }
-        //}
     }
 
     return 1;
@@ -236,4 +214,7 @@ void move(SDL_Rect *bRect, ss *ss1)
     if(bRect->y > SCREEN_HEIGHT){
         bRect->y = 0;
     }
+
+    /* Rotation */
+    ss1->angle += ss1->rotation;
 }

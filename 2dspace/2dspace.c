@@ -1,5 +1,7 @@
 /* compile: gcc -lSDL2 -lSDL2_image */
 
+/* todo: add destroy func */
+
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,23 +9,33 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 500
 
+/* Space ship struct */
+typedef struct spaceShip{
+    int velocity;
+    int directionY;
+    int velX;
+    int velY;
+}ss;
+
+/* Declare functions */
 SDL_Window *init();
 SDL_Renderer *initRenderer(SDL_Window *window);
 SDL_Texture *loadImageAsTexture(SDL_Window *window, SDL_Renderer *gRenderer, char *file, int width, int height, int x, int y);
 void closeAll(SDL_Window *window);
-int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect);
+int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, ss *ss1);
 void bounce(SDL_Rect *bRect);
-void move(SDL_Rect *bRect);
-
-/* Will pass these globals as a property of the ball */
-
-int velocity = 1;
-int directionY = 0;
-int velX= 0;
-int velY= 0;
+void move(SDL_Rect *bRect, ss *ss1);
 
 int main(int argc, char* args[])
 {
+    /* Define space ship */
+    ss ss1;
+    ss1.velocity = 1;
+    ss1.directionY = 1;
+    ss1.velX = 0;
+    ss1.velY = 0;
+
+    /* SDL window + renderer */
 	SDL_Window *window = init();
     SDL_Renderer *gRenderer = initRenderer(window);
     
@@ -46,9 +58,8 @@ int main(int argc, char* args[])
     SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-11.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
     SDL_Texture *bball = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, x, y);
         
-    directionY = 1;
-    while(handleEvents(window, gRenderer, &bRect)){
-        move(&bRect);
+    while(handleEvents(window, gRenderer, &bRect, &ss1)){
+        move(&bRect, &ss1);
         SDL_RenderClear(gRenderer);
 
         /* Render bg */
@@ -143,7 +154,7 @@ void closeAll(SDL_Window *window)
 	SDL_Quit();
 }
 
-int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect)
+int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, ss *ss1)
 {
     SDL_Event e;
 
@@ -156,16 +167,16 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect)
         if(e.type == SDL_KEYDOWN && e.key.repeat == 0){
             switch(e.key.keysym.sym){
                 case SDLK_UP:
-                    velY -= velocity;
+                    ss1->velY -= ss1->velocity;
                     break;
                 case SDLK_DOWN:
-                    velY += velocity;
+                    ss1->velY += ss1->velocity;
                     break;
                 case SDLK_LEFT:
-                    velX -= velocity;
+                    ss1->velX -= ss1->velocity;
                     break;
                 case SDLK_RIGHT:
-                    velX += velocity;
+                    ss1->velX += ss1->velocity;
                     break;
                 case SDLK_q:
                     return 0;
@@ -199,9 +210,9 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect)
 }
 
 /* Sim smooth movement */
-void move(SDL_Rect *bRect)
+void move(SDL_Rect *bRect, ss *ss1)
 {
-    bRect->x += velX;
+    bRect->x += ss1->velX;
 
     /* Teleport */
     if((bRect->x < 0 )){
@@ -212,7 +223,7 @@ void move(SDL_Rect *bRect)
         bRect->x = 0;
     }
 
-    bRect->y += velY;
+    bRect->y += ss1->velY;
 
     /* Detect floor/ceiling */
     if( bRect->y + bRect->h < 0 ){

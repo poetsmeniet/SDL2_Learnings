@@ -1,7 +1,5 @@
 /* compile: gcc -lSDL2 -lSDL2_image */
 
-/* todo: add destroy func */
-
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,6 +15,7 @@ typedef struct spaceShip{
     int velY;
     double angle;
     int rotation;
+    SDL_Rect sRect;
 }ss;
 
 /* Declare functions */
@@ -24,51 +23,32 @@ SDL_Window *init();
 SDL_Renderer *initRenderer(SDL_Window *window);
 SDL_Texture *loadImageAsTexture(SDL_Window *window, SDL_Renderer *gRenderer, char *file, int width, int height, int x, int y);
 void closeAll(SDL_Window *window, SDL_Renderer *gRenderer);
-int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, ss *ss1);
-void move(SDL_Rect *bRect, ss *ss1);
+int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1);
+void move(ss *ss1);
+void initSpaceShip(ss *ss1);
 
 int main(int argc, char* args[])
 {
     /* Define space ship */
     ss ss1;
-    ss1.velocity = 1;
-    ss1.directionY = 1;
-    ss1.velX = 0;
-    ss1.velY = 0;
-    ss1.angle = 0.0;
-    ss1.rotation = 0;
-
+    initSpaceShip(&ss1);
+    
     /* SDL window + renderer */
 	SDL_Window *window = init();
     SDL_Renderer *gRenderer = initRenderer(window);
     
-    SDL_RendererFlip flip = SDL_FLIP_NONE;
-    SDL_Rect bRect; 
-    bRect.x = 100; 
-    bRect.y = 100; 
-    bRect.w = SCREEN_WIDTH; 
-    bRect.h = SCREEN_HEIGHT; 
-
-    /* Initial position of ball */
-    int x = 0;
-    int y = 0;
-
-    /* Ball dimensions */
-    bRect.w = 40; 
-    bRect.h = 40; 
-
-    /* Load background image */
+    /* Load game objects */
     SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-11.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
-    SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, x, y);
+    SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, 0, 0);
         
     /* Main event loop */
-    while(handleEvents(window, gRenderer, &bRect, &ss1)){
-        move(&bRect, &ss1);
+    while(handleEvents(window, gRenderer, &ss1)){
+        move(&ss1);
         SDL_RenderClear(gRenderer);
 
         /* Render bg and ship.. todo: move to function */
-        SDL_RenderCopyEx(gRenderer, bg, NULL, NULL, 0.0, NULL, flip);
-        SDL_RenderCopyEx(gRenderer, ship1, NULL, &bRect, ss1.angle, NULL, flip);
+        SDL_RenderCopyEx(gRenderer, bg, NULL, NULL, 0.0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(gRenderer, ship1, NULL, &ss1.sRect, ss1.angle, NULL, SDL_FLIP_NONE);
 
 	    SDL_RenderPresent(gRenderer);
     }
@@ -154,14 +134,14 @@ void closeAll(SDL_Window *window, SDL_Renderer *gRenderer)
 	SDL_Quit();
 }
 
-int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, ss *ss1)
+int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
 {
     SDL_Event e;
 
     while(SDL_PollEvent(&e) != 0){
         /* Handle quit event */
         if(e.type == SDL_QUIT)
-            closeAll(window, gRenderer);
+            return 0;
 
         /* Handle keypresses */
         if(e.type == SDL_KEYDOWN && e.key.repeat == 0){
@@ -191,30 +171,44 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, SDL_Rect *bRect, s
 }
 
 /* Sim smooth movement */
-void move(SDL_Rect *bRect, ss *ss1)
+void move(ss *ss1)
 {
-    bRect->x += ss1->velX;
+    ss1->sRect.x += ss1->velX;
 
     /* Teleport */
-    if((bRect->x < 0 )){
-        bRect->x = SCREEN_WIDTH;
+    if((ss1->sRect.x < 0 )){
+        ss1->sRect.x = SCREEN_WIDTH;
     }
 
-    if(bRect->x > SCREEN_WIDTH){
-        bRect->x = 0;
+    if(ss1->sRect.x > SCREEN_WIDTH){
+        ss1->sRect.x = 0;
     }
 
-    bRect->y += ss1->velY;
+    ss1->sRect.y += ss1->velY;
 
     /* Detect floor/ceiling */
-    if( bRect->y + bRect->h < 0 ){
-        bRect->y = SCREEN_HEIGHT;
+    if( ss1->sRect.y + ss1->sRect.h < 0 ){
+        ss1->sRect.y = SCREEN_HEIGHT;
     }
     
-    if(bRect->y > SCREEN_HEIGHT){
-        bRect->y = 0;
+    if(ss1->sRect.y > SCREEN_HEIGHT){
+        ss1->sRect.y = 0;
     }
 
     /* Rotation */
     ss1->angle += ss1->rotation;
+}
+
+void initSpaceShip(ss *ss1)
+{
+    ss1->velocity = 1;
+    ss1->directionY = 1;
+    ss1->velX = 0;
+    ss1->velY = 0;
+    ss1->angle = 0.0;
+    ss1->rotation = 0;
+    ss1->sRect.x = 100; 
+    ss1->sRect.y = 100; 
+    ss1->sRect.w = 40; 
+    ss1->sRect.h = 40; 
 }

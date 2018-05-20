@@ -192,24 +192,26 @@ void move(ss *ss1)
     ss1->y += ss1->velY;
     ss1->sRect.y = ss1->y;
 
-    /* Teleport */
-    if((ss1->sRect.x < 0 )){
-        ss1->sRect.x = SCREEN_WIDTH;
+    printf("x: %f, y: %f\n", ss1->x, ss1->y);
+
+    /* Teleport through walls*/
+    if((ss1->sRect.x < 0)){
+        ss1->x = SCREEN_WIDTH;
     }
 
     if(ss1->sRect.x > SCREEN_WIDTH){
-        ss1->sRect.x = 0;
+        ss1->x = 0.0;
     }
 
     ss1->sRect.y += ss1->velY;
 
-    /* Detect floor/ceiling */
+    /* Teleport through floor/ceiling */
     if( ss1->sRect.y + ss1->sRect.h < 0 ){
-        ss1->sRect.y = SCREEN_HEIGHT;
+        ss1->y = SCREEN_HEIGHT;
     }
     
     if(ss1->sRect.y > SCREEN_HEIGHT){
-        ss1->sRect.y = 1;
+        ss1->y = 0;
     }
 
     /* Rotation */

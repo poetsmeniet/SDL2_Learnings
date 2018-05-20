@@ -4,15 +4,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL2/SDL_image.h>
+#include <math.h>
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 500
+#define degToRad(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
 
 /* Space ship struct */
 typedef struct spaceShip{
-    int velocity;
+    double velocity;
     int directionY;
-    int velX;
-    int velY;
+    double x;
+    double y;
+    double velX;
+    double velY;
     double angle;
     int rotation;
     SDL_Rect sRect;
@@ -39,7 +43,7 @@ int main(int argc, char* args[])
     
     /* Load game objects */
     SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-11.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
-    SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, 0, 0);
+    SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, 100, 100);
         
     /* Main event loop */
     while(handleEvents(window, gRenderer, &ss1)){
@@ -148,16 +152,21 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
         if(e.type == SDL_KEYDOWN && e.key.repeat == 0){
             switch(e.key.keysym.sym){
                 case SDLK_UP:
-                    ss1->velY -= ss1->velocity;
+                    //ss1->velY -= ss1->velocity;
+                    ss1->velocity += 2.0;
                     break;
                 case SDLK_DOWN:
-                    ss1->velY += ss1->velocity;
+                    //ss1->velY += ss1->velocity;
+                    ss1->velocity -= 2.0;
                     break;
                 case SDLK_LEFT:
                     ss1->rotation -= 1;
                     break;
                 case SDLK_RIGHT:
                     ss1->rotation += 1;
+                    break;
+                case SDLK_SPACE:
+                    ss1->velocity += 2.0;
                     break;
                 case SDLK_q:
                     return 0;
@@ -174,7 +183,14 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
 /* Sim smooth movement */
 void move(ss *ss1)
 {
-    ss1->sRect.x += ss1->velX;
+    /* Determine movement by using angle/cos/sin */
+    ss1->velX = ss1->velocity * cos(degToRad(ss1->angle - 90));
+    ss1->x += ss1->velX;
+    ss1->sRect.x = ss1->x;
+    
+    ss1->velY = ss1->velocity * sin(degToRad(ss1->angle - 90));
+    ss1->y += ss1->velY;
+    ss1->sRect.y = ss1->y;
 
     /* Teleport */
     if((ss1->sRect.x < 0 )){
@@ -193,7 +209,7 @@ void move(ss *ss1)
     }
     
     if(ss1->sRect.y > SCREEN_HEIGHT){
-        ss1->sRect.y = 0;
+        ss1->sRect.y = 1;
     }
 
     /* Rotation */
@@ -206,7 +222,7 @@ void move(ss *ss1)
 
 void initSpaceShip(ss *ss1)
 {
-    ss1->velocity = 1;
+    ss1->velocity = 0.0;
     ss1->directionY = 1;
     ss1->velX = 0;
     ss1->velY = 0;

@@ -51,6 +51,7 @@ int main(int argc, char* args[])
         SDL_RenderCopyEx(gRenderer, ship1, NULL, &ss1.sRect, ss1.angle, NULL, SDL_FLIP_NONE);
 
 	    SDL_RenderPresent(gRenderer);
+        printf("Angle: %.2f (%d), rotation: %d\n", ss1.angle, ((int) ss1.angle % 360), ss1.rotation);
     }
 
     SDL_DestroyTexture(ship1);
@@ -197,6 +198,10 @@ void move(ss *ss1)
 
     /* Rotation */
     ss1->angle += ss1->rotation;
+    if(ss1->angle <= 0)
+        ss1->angle = 360.0;
+    else if(ss1->angle >= 360)
+        ss1->angle = 0;
 }
 
 void initSpaceShip(ss *ss1)

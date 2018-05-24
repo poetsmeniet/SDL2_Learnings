@@ -1,4 +1,4 @@
-/* compile: gcc -lSDL2 -lSDL2_image */
+/* compile: gcc -lm -lSDL2 -lSDL2_image */
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -9,6 +9,8 @@
 #define SCREEN_HEIGHT 500
 #define degToRad(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
 
+//Todo: add some more error checking
+
 /* Space ship struct */
 typedef struct spaceShip{
     double velocity;
@@ -17,7 +19,8 @@ typedef struct spaceShip{
     double y;
     double velX;
     double velY;
-    double angle;
+    double angle; /* Ships angle */
+    double targetAngle; /* Ships possible angle */
     int rotation;
     SDL_Rect sRect;
 }ss;
@@ -43,7 +46,7 @@ int main(int argc, char* args[])
     
     /* Load game objects */
     SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-11.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
-    SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, 100, 100);
+    SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, 0, 0);
         
     /* Main event loop */
     while(handleEvents(window, gRenderer, &ss1)){
@@ -52,10 +55,9 @@ int main(int argc, char* args[])
 
         /* Render bg and ship.. todo: move to function */
         SDL_RenderCopyEx(gRenderer, bg, NULL, NULL, 0.0, NULL, SDL_FLIP_NONE);
-        SDL_RenderCopyEx(gRenderer, ship1, NULL, &ss1.sRect, ss1.angle, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(gRenderer, ship1, NULL, &ss1.sRect, ss1.targetAngle, NULL, SDL_FLIP_NONE);
 
 	    SDL_RenderPresent(gRenderer);
-        printf("Angle: %.2f (%d), rotation: %d\n", ss1.angle, ((int) ss1.angle % 360), ss1.rotation);
     }
 
     SDL_DestroyTexture(ship1);
@@ -150,26 +152,59 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
 
         /* Handle keypresses */
         if(e.type == SDL_KEYDOWN && e.key.repeat == 0){
+
+            /* Find adjustments for going through poles */
+            double diff = (ss1->angle - ss1->targetAngle);
+            if(diff > 260){
+                diff = 360 - diff;
+                ss1->angle = ss1->targetAngle - diff;
+            }
+            if(diff < -260){
+                diff = 360 + diff;
+                ss1->angle = ss1->targetAngle + diff;
+            }
+
             switch(e.key.keysym.sym){
                 case SDLK_UP:
-                    //ss1->velY -= ss1->velocity;
-                    ss1->velocity += 2.0;
-                    break;
-                case SDLK_DOWN:
-                    //ss1->velY += ss1->velocity;
-                    ss1->velocity -= 2.0;
+                    if(ss1->velocity > 0){
+                        if(diff > 130|| diff < -130){
+                            /* Only reduce speed, minimal autopilot */
+                            ss1->velocity -= 0.5;
+                        }else{
+                            /* Increase speed */
+                            ss1->velocity += 0.5;
+                            /* Keeping some momentum in old direction (funcky) */
+                            ss1->angle = ss1->angle - ((ss1->angle - ss1->targetAngle) / ss1->velocity);
+                        }
+                    }else{
+                        /* When starting engines, no previous angle available */
+                        ss1->angle = ss1->targetAngle;
+                        ss1->velocity += 0.5;
+                    }
                     break;
                 case SDLK_LEFT:
-                    ss1->rotation -= 1;
+                    ss1->rotation = -2;
                     break;
                 case SDLK_RIGHT:
-                    ss1->rotation += 1;
+                    ss1->rotation = 2;
                     break;
-                case SDLK_SPACE:
-                    ss1->velocity += 2.0;
-                    break;
+                //case SDLK_SPACE:
+                //    ss1->velocity += 2.0;
+                //    break;
                 case SDLK_q:
                     return 0;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if(e.type == SDL_KEYUP && e.key.repeat == 0){
+            switch(e.key.keysym.sym){
+                case SDLK_LEFT:
+                    ss1->rotation = 0;
+                    break;
+                case SDLK_RIGHT:
+                    ss1->rotation = 0;
                     break;
                 default:
                     break;
@@ -183,6 +218,10 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
 /* Sim smooth movement */
 void move(ss *ss1)
 {
+    /* Reverse movement not implemented */
+    if(ss1->velocity < 0)
+        ss1->velocity = 0;
+    
     /* Determine movement by using angle/cos/sin */
     ss1->velX = ss1->velocity * cos(degToRad(ss1->angle - 90));
     ss1->x += ss1->velX;
@@ -191,15 +230,11 @@ void move(ss *ss1)
     ss1->velY = ss1->velocity * sin(degToRad(ss1->angle - 90));
     ss1->y += ss1->velY;
     ss1->sRect.y = ss1->y;
-
-    printf("x: %f, y: %f\n", ss1->x, ss1->y);
-
+    
     /* Teleport through walls*/
     if((ss1->sRect.x < 0)){
         ss1->x = SCREEN_WIDTH;
-    }
-
-    if(ss1->sRect.x > SCREEN_WIDTH){
+    }else if(ss1->sRect.x > SCREEN_WIDTH){
         ss1->x = 0.0;
     }
 
@@ -215,11 +250,11 @@ void move(ss *ss1)
     }
 
     /* Rotation */
-    ss1->angle += ss1->rotation;
-    if(ss1->angle <= 0)
-        ss1->angle = 360.0;
-    else if(ss1->angle >= 360)
-        ss1->angle = 0;
+    ss1->targetAngle += ss1->rotation;
+    if(ss1->targetAngle <= 0)
+        ss1->targetAngle = 360.0;
+    else if(ss1->targetAngle >= 360)
+        ss1->targetAngle = 0;
 }
 
 void initSpaceShip(ss *ss1)
@@ -228,6 +263,8 @@ void initSpaceShip(ss *ss1)
     ss1->directionY = 1;
     ss1->velX = 0;
     ss1->velY = 0;
+    ss1->x = 100;
+    ss1->y = 100;
     ss1->angle = 0.0;
     ss1->rotation = 0;
     ss1->sRect.x = 100; 

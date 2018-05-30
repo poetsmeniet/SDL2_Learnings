@@ -1,12 +1,13 @@
 /* compile: gcc -lm -lSDL2 -lSDL2_image */
+/* An exploration on using angle as a basis for movement */
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <string.h>
 #include <SDL2/SDL_image.h>
 #include <math.h>
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 500
+#define SCREEN_WIDTH 1080
+#define SCREEN_HEIGHT 700 
 #define degToRad(angleInDegrees) ((angleInDegrees) * M_PI / 180.0)
 
 //Todo: add some more error checking
@@ -33,6 +34,7 @@ void closeAll(SDL_Window *window, SDL_Renderer *gRenderer);
 int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1);
 void move(ss *ss1);
 void initSpaceShip(ss *ss1);
+void grav2center(ss *ss1);
 
 int main(int argc, char* args[])
 {
@@ -43,10 +45,18 @@ int main(int argc, char* args[])
     /* SDL window + renderer */
 	SDL_Window *window = init();
     SDL_Renderer *gRenderer = initRenderer(window);
+
+    /* Temporary moon rect */
+    SDL_Rect moonRect;
+    moonRect.x = 615;
+    moonRect.y = 330;
+    moonRect.w = 79;
+    moonRect.h = 79;
     
     /* Load game objects */
-    SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-11.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
+    SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-1.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
     SDL_Texture *ship1 = loadImageAsTexture(window, gRenderer, "spaceship.png", 30, 30, 0, 0);
+    SDL_Texture *moon = loadImageAsTexture(window, gRenderer, "moon.png", 79, 79, 640, 350);
         
     /* Main event loop */
     while(handleEvents(window, gRenderer, &ss1)){
@@ -55,9 +65,11 @@ int main(int argc, char* args[])
 
         /* Render bg and ship.. todo: move to function */
         SDL_RenderCopyEx(gRenderer, bg, NULL, NULL, 0.0, NULL, SDL_FLIP_NONE);
+        SDL_RenderCopyEx(gRenderer, moon, NULL, &moonRect, 0.0, NULL, SDL_FLIP_NONE);
         SDL_RenderCopyEx(gRenderer, ship1, NULL, &ss1.sRect, ss1.targetAngle, NULL, SDL_FLIP_NONE);
 
 	    SDL_RenderPresent(gRenderer);
+        //printf("Vel: %f, angle: %f\n", ss1.velocity, ss1.angle);
     }
 
     SDL_DestroyTexture(ship1);
@@ -183,10 +195,13 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                     }
                     break;
                 case SDLK_LEFT:
-                    ss1->rotation = -2;
+                    ss1->rotation -= 2;
                     break;
                 case SDLK_RIGHT:
-                    ss1->rotation = 2;
+                    ss1->rotation += 2;
+                    break;
+                case SDLK_DOWN:
+                    ss1->velocity = 0.0;
                     break;
                 //case SDLK_SPACE:
                 //    ss1->velocity += 2.0;
@@ -259,16 +274,38 @@ void move(ss *ss1)
 
 void initSpaceShip(ss *ss1)
 {
-    ss1->velocity = 0.0;
+    ss1->velocity = 1.0;
     ss1->directionY = 1;
     ss1->velX = 0;
     ss1->velY = 0;
-    ss1->x = 100;
+    ss1->x = 400;
     ss1->y = 100;
-    ss1->angle = 0.0;
+    ss1->angle = 120.0;
+    ss1->targetAngle = 120.0;
     ss1->rotation = 0;
     ss1->sRect.x = 100; 
     ss1->sRect.y = 100; 
     ss1->sRect.w = 40; 
     ss1->sRect.h = 40; 
+}
+
+double bearing(double a1, double a2, double b1, double b2) {
+    double TWOPI = 6.2831853071795865;
+    double RAD2DEG = 57.2957795130823209;
+    
+    // if (a1 = b1 and a2 = b2) throw an error 
+    double theta = atan2(b1 - a1, a2 - b2);
+    if (theta < 0.0)
+        theta += TWOPI;
+    //printf("Bearing to center is %f ", RAD2DEG * theta);
+    return RAD2DEG * theta;
+}
+
+double distance(int x1, int y1, int x2, int y2)
+{
+    int a = x1 - x2;
+    int b = y1 - y2;
+    
+    double c = sqrt( a*a + b*b );
+    return c;
 }

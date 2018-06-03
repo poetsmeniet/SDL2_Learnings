@@ -167,67 +167,32 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
             switch(e.key.keysym.sym){
                 case SDLK_UP:
                     if(ss1->speed > 0){
-                        ss1->thrust += 0.1;
+                        ss1->thrust += 0.5;
                         float diff;
-                        if(ss1->targetAngle > ss1->angle)
-                            diff = ss1->targetAngle - ss1->angle;
-                        else
-                            diff = ss1->angle - ss1->targetAngle;
+                        diff = ss1->targetAngle - ss1->angle;
 
                         diff /= 2;
                         
                         double newAngle = 0.0;
-                        if(ss1->angle < ss1->targetAngle)
-                            newAngle = (ss1->angle + diff);
-                        else
-                            newAngle = (ss1->angle - diff);
+                        newAngle = (ss1->angle + diff);
 
                         printf("\tdiff: %f\n", diff);
                         
                         
-                        if(remainder(diff, 360) <= 90){
+                        //if(remainder(diff, 360) < 90){
+                        if(remainder(diff * 2, 360) < 90){
                             ss1->speed += ss1->thrust;
                         }else{
+                            printf("jib\n");
                             ss1->speed -= ss1->thrust;
                         }
                         ss1->angle = newAngle;
-
-                         //ss1->angle = ss1->angle - ((ss1->angle - ss1->targetAngle) / (ss1->speed * 1));
-
-                        //}else{
-                        //    printf("\t 2: \n");
-                        // ss1->angle = ss1->angle - ((ss1->angle - ss1->targetAngle) / (ss1->speed * 1));
-                        // ss1->thrust += 0.1;
-                        //}
-
-//                        float diff = ss1->targetAngle - ss1->angle;
-//                        if(diff < 0)
-//                            diff *= -1;
-//
-//                        printf("\tdiff: %f\n", diff);
-//
-                        //if(diff < 90){
-                        //    printf("\t < 90\n");
-                        //    ss1->thrust += 0.2;
-                        //    /* Keeping some momentum in old direction (funcky) */
-                        //    //ss1->angle = ss1->angle - ((ss1->angle - ss1->targetAngle) / ss1->thrust);
-                        //    if(ss1->speed > 0)
-                        //        ss1->angle = ss1->angle - ((ss1->angle - ss1->targetAngle) / (ss1->speed * 1));
-                        //}else{
-                        //    printf("\tadj2.. angle: %f, ta: %f, \n", ss1->angle, ss1->targetAngle);
-                        //    ss1->thrust += 0.2;
-                        //    //ss1->thrust += 0.2;
-                        //    /* Keeping some momentum in old direction (funcky) */
-                        //    //if(ss1->thrust > 0)
-                        //        ss1->angle = ss1->angle - ((ss1->angle - ss1->targetAngle) / (ss1->speed * 10));
-                        //}
-
                     }else{
                         /* When starting engines, no previous angle available */
                         printf("\tStart from stop\n");
                         ss1->angle = ss1->targetAngle;
-                        ss1->thrust += 0.1;
-        ss1->speed += ss1->thrust;
+                        ss1->thrust += 0.5;
+                        ss1->speed += ss1->thrust;
                     }
                         //ss1->angle = ss1->targetAngle;
                     break;
@@ -238,7 +203,7 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                     ss1->rotation += 2;
                     break;
                 case SDLK_DOWN:
-                    ss1->thrust -= 0.1;
+                    ss1->thrust -= 0.5;
                     break;
                 //case SDLK_SPACE:
                 //    ss1->thrust += 2.0;

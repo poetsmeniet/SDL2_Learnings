@@ -34,6 +34,7 @@ void closeAll(SDL_Window *window, SDL_Renderer *gRenderer);
 int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1);
 void move(ss *ss1);
 void initSpaceShip(ss *ss1);
+void grav(ss *ss1);
 
 int main(int argc, char* args[])
 {
@@ -60,7 +61,7 @@ int main(int argc, char* args[])
     /* Main event loop */
     while(handleEvents(window, gRenderer, &ss1)){
         move(&ss1);
-        //grav(&ss1);
+        grav(&ss1);
         SDL_RenderClear(gRenderer);
 
         /* Render bg and ship.. todo: move to function */
@@ -205,7 +206,7 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                     ss1->rotation += 2;
                     break;
                 case SDLK_DOWN:
-                    ss1->thrust -= 0.5;
+                    ss1->speed -= 0.5;
                     break;
                 //case SDLK_SPACE:
                 //    ss1->thrust += 2.0;
@@ -244,8 +245,8 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
 void move(ss *ss1)
 {
     /* Reverse movement not implemented */
-    if(ss1->thrust < 0)
-        ss1->thrust = 0;
+    if(ss1->speed < 0)
+        ss1->speed = 0;
     
     /* Determine x/y vel by using angle/cos/sin */
     ss1->velX = ss1->speed * cos(degToRad(ss1->angle - 90));
@@ -281,7 +282,6 @@ void move(ss *ss1)
         ss1->targetAngle = 0;
 
     ss1->targetAngle += ss1->rotation;
-//    ss1->angle = ss1->targetAngle;
 }
 
 void initSpaceShip(ss *ss1)
@@ -344,9 +344,6 @@ void grav(ss *ss1)
         ss1->y += ss1->velY;
         ss1->sRect.y = ss1->y;
 
-        float diff = ss1->angle - brng;
-        if(diff < 0)
-            diff *= -1;
-
+        ss1->speed -= 0.01;
     }
 }

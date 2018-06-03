@@ -1,5 +1,5 @@
 /* compile: gcc -lm -lSDL2 -lSDL2_image */
-/* An exploration on using angle as a basis for movement */
+/* An exploration on creating "2d planetary mechanics" */
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -181,9 +181,7 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                         if(diff < 0)
                             diff *= -1;
 
-                        printf("\tdiff: %f\n", diff);
-                        
-                        if((diff * 2) < 90){
+                        if(diff < 45){
                             ss1->speed += ss1->thrust;
                             ss1->angle = newAngle;
                         }else{
@@ -208,9 +206,9 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                 case SDLK_DOWN:
                     ss1->speed -= 0.5;
                     break;
-                //case SDLK_SPACE:
-                //    ss1->thrust += 2.0;
-                //    break;
+                case SDLK_SPACE:
+                    ss1->thrust += 2.0;
+                    break;
                 case SDLK_q:
                     return 0;
                     break;
@@ -292,7 +290,7 @@ void initSpaceShip(ss *ss1)
     ss1->velY = 0;
     ss1->x = 300;
     ss1->y = 100;
-    ss1->angle = 90.0;
+    ss1->angle = 105.0;
     ss1->targetAngle = ss1->angle;
     ss1->rotation = 0;
     ss1->sRect.x = 100; 
@@ -331,7 +329,7 @@ void grav(ss *ss1)
     if(dst < 140 && dst > 10){
 
         /* Apply gravity to x/y */
-        float gravity = 1.0;
+        float gravity = 2.0;
         float brng = bearing(ss1->x, ss1->y, xD, yD);
         float dstMp = dst * 0.02;
         gravity /= dstMp;
@@ -344,6 +342,12 @@ void grav(ss *ss1)
         ss1->y += ss1->velY;
         ss1->sRect.y = ss1->y;
 
-        ss1->speed -= 0.01;
+        float perp = brng - ss1->angle;
+        if(perp < 0)
+            perp *= -1;
+
+        //printf("perp: %f\n", perp);
+        //if(perp > 150)
+            ss1->speed -= 0.01;
     }
 }

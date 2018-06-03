@@ -320,6 +320,7 @@ double distance(int x1, int y1, int x2, int y2)
     return c;
 }
 
+/* Hard coded the gravity object, just for testing */
 void grav(ss *ss1)
 {
     float dst = 0.0;

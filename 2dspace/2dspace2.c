@@ -69,7 +69,7 @@ int main(int argc, char* args[])
         SDL_RenderCopyEx(gRenderer, ship1, NULL, &ss1.sRect, ss1.targetAngle, NULL, SDL_FLIP_NONE);
 
 	    SDL_RenderPresent(gRenderer);
-        printf("Speed: %f, thrust: %f, angle: %f, ta: %f\n", ss1.speed, ss1.thrust, ss1.angle, ss1.targetAngle);
+        //printf("Speed: %f, thrust: %f, angle: %f, ta: %f\n", ss1.speed, ss1.thrust, ss1.angle, ss1.targetAngle);
     }
 
     SDL_DestroyTexture(ship1);
@@ -168,25 +168,27 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                 case SDLK_UP:
                     if(ss1->speed > 0){
                         ss1->thrust += 0.5;
+                        
+                        /* This might need some mathimatical refinement */
                         float diff;
-                        diff = ss1->targetAngle - ss1->angle;
-
+                        diff = remainder(ss1->targetAngle - ss1->angle, 360);
                         diff /= 2;
                         
                         double newAngle = 0.0;
                         newAngle = (ss1->angle + diff);
 
+                        if(diff < 0)
+                            diff *= -1;
+
                         printf("\tdiff: %f\n", diff);
                         
-                        
-                        //if(remainder(diff, 360) < 90){
-                        if(remainder(diff * 2, 360) < 90){
+                        if((diff * 2) < 90){
                             ss1->speed += ss1->thrust;
+                            ss1->angle = newAngle;
                         }else{
                             printf("jib\n");
                             ss1->speed -= ss1->thrust;
                         }
-                        ss1->angle = newAngle;
                     }else{
                         /* When starting engines, no previous angle available */
                         printf("\tStart from stop\n");
@@ -194,7 +196,7 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                         ss1->thrust += 0.5;
                         ss1->speed += ss1->thrust;
                     }
-                        //ss1->angle = ss1->targetAngle;
+                    printf("Speed: %f, thrust: %f, angle: %f, ta: %f\n", ss1->speed, ss1->thrust, ss1->angle, ss1->targetAngle);
                     break;
                 case SDLK_LEFT:
                     ss1->rotation -= 2;
@@ -245,7 +247,6 @@ void move(ss *ss1)
     if(ss1->thrust < 0)
         ss1->thrust = 0;
     
-
     /* Determine x/y vel by using angle/cos/sin */
     ss1->velX = ss1->speed * cos(degToRad(ss1->angle - 90));
     ss1->x += ss1->velX;
@@ -254,11 +255,6 @@ void move(ss *ss1)
     ss1->velY = ss1->speed * sin(degToRad(ss1->angle - 90));
     ss1->y += ss1->velY;
     ss1->sRect.y = ss1->y;
-    
-    //ss1->angle = ss1->targetAngle;
-    
-    
-    
     
     /* Teleport through walls*/
     if((ss1->sRect.x < 0)){

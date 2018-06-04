@@ -1,5 +1,6 @@
 /* compile: gcc -lm -lSDL2 -lSDL2_image */
-/* An exploration on creating "2d planetary mechanics" */
+/* An exploration on creating "2d planetary mechanics" 
+ * gcc -Wall -lm -lSDL2 -lSDL2_image */
 
 #include <SDL2/SDL.h>
 #include <stdio.h>
@@ -330,9 +331,9 @@ void grav(ss *ss1)
     if(dst < 140 && dst > 10){
 
         /* Apply gravity to x/y */
-        float gravity = 2.0;
+        float gravity = 1.0;
         float brng = bearing(ss1->x, ss1->y, xD, yD);
-        float dstMp = dst * 0.02;
+        float dstMp = dst * 0.04;
         gravity /= dstMp;
 
         ss1->velX = gravity * cos(degToRad(brng - 90));
@@ -343,12 +344,7 @@ void grav(ss *ss1)
         ss1->y += ss1->velY;
         ss1->sRect.y = ss1->y;
 
-        float perp = brng - ss1->angle;
-        if(perp < 0)
-            perp *= -1;
-
-        //printf("perp: %f\n", perp);
-        //if(perp > 150)
-            ss1->speed -= 0.01;
+        /* The closer the object, the higher the speed towards it */
+        ss1->speed -= 0.2 / (dst / 10);
     }
 }

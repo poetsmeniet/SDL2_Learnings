@@ -49,10 +49,10 @@ int main(int argc, char* args[])
 
     /* Temporary moon rect */
     SDL_Rect moonRect;
-    moonRect.x = 415;
-    moonRect.y = 130;
-    moonRect.w = 279;
-    moonRect.h = 279;
+    moonRect.x = 500;
+    moonRect.y = 220;
+    moonRect.w = 83;
+    moonRect.h = 83;
     
     /* Load game objects */
     SDL_Texture *bg = loadImageAsTexture(window, gRenderer, "space-wallpaper-preview-1.jpg", SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0);
@@ -182,16 +182,14 @@ int handleEvents(SDL_Window *window, SDL_Renderer *gRenderer, ss *ss1)
                         if(diff < 0)
                             diff *= -1;
 
-                        if(diff < 45){
+                        if(diff < 75){
                             ss1->speed += ss1->thrust;
                             ss1->angle = newAngle;
                         }else{
-                            printf("jib\n");
                             ss1->speed -= ss1->thrust;
                         }
                     }else{
                         /* When starting engines, no previous angle available */
-                        printf("\tStart from stop\n");
                         ss1->angle = ss1->targetAngle;
                         ss1->thrust += 0.5;
                         ss1->speed += ss1->thrust;
@@ -304,11 +302,10 @@ double bearing(double a1, double a2, double b1, double b2) {
     double TWOPI = 6.2831853071795865;
     double RAD2DEG = 57.2957795130823209;
     
-    // if (a1 = b1 and a2 = b2) throw an error 
     double theta = atan2(b1 - a1, a2 - b2);
     if (theta < 0.0)
         theta += TWOPI;
-    //printf("Bearing to center is %f ", RAD2DEG * theta);
+    
     return RAD2DEG * theta;
 }
 
@@ -328,7 +325,7 @@ void grav(ss *ss1)
     int xD = 535;
     int yD = 250;
     dst = distance(ss1->x, ss1->y, xD, yD);
-    if(dst < 140 && dst > 10){
+    if(dst < 200 && dst > 10){
 
         /* Apply gravity to x/y */
         float gravity = 1.0;
@@ -344,7 +341,8 @@ void grav(ss *ss1)
         ss1->y += ss1->velY;
         ss1->sRect.y = ss1->y;
 
-        /* The closer the object, the higher the speed towards it */
-        ss1->speed -= 0.2 / (dst / 10);
+        /* The closer the object, the higher the speed towards it 
+         * -todo:  speed increases at vector comp*/
+        ss1->speed -= 0.1 / (dst / 10);
     }
 }
